@@ -245,4 +245,4 @@ ModelManifest.xml
 .fake/
 
 # Account Details
-[Cc]redentials/client.json
+/DLDHelper/Credentials/client.json

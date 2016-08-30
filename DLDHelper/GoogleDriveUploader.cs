@@ -24,33 +24,47 @@ namespace DLDHelper
         {
             m_Config = config;
         }
+
+        [LogHelper(LogHelperAttribute.Target.Log)]
         public void Init()
         {
-            UserCredential credential = null;;
+            UserCredential credential = null;
 
-            using (var stream = new FileStream(m_Config.GoogleAPIParams.Credentials, FileMode.Open, FileAccess.Read))
+            if (string.IsNullOrEmpty(m_Config.GoogleAPIParams.Credentials))
             {
-                string credPath = System.Environment.GetFolderPath(
-                    System.Environment.SpecialFolder.Personal);
-                credPath = Path.Combine(credPath, ".credentials/drive-dotnet.json");
-
-                credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
-                    GoogleClientSecrets.Load(stream).Secrets,
-                    m_Config.GoogleAPIParams.Scopes,
-                    "user",
-                    CancellationToken.None,
-                    new FileDataStore(credPath, true)).Result;
-                Console.WriteLine("Credential file saved to: " + credPath);
+                throw new Exception("The Google API setting: Credentials is invalid!");
             }
 
-            // Create Drive API service.
-            if(m_Service == null)
+            try
             {
-                m_Service = new DriveService(new BaseClientService.Initializer()
+                using (var stream = new FileStream(m_Config.GoogleAPIParams.Credentials, FileMode.Open, FileAccess.Read))
                 {
-                    HttpClientInitializer = credential,
-                    ApplicationName = AppDomain.CurrentDomain.FriendlyName
-                });
+                    string credPath = System.Environment.GetFolderPath(
+                        System.Environment.SpecialFolder.Personal);
+                    credPath = Path.Combine(credPath, ".credentials/drive-dotnet.json");
+
+                    credential = GoogleWebAuthorizationBroker.AuthorizeAsync(
+                        GoogleClientSecrets.Load(stream).Secrets,
+                        m_Config.GoogleAPIParams.Scopes,
+                        "user",
+                        CancellationToken.None,
+                        new FileDataStore(credPath, true)).Result;
+                    Console.WriteLine("Credential file saved to: " + credPath);
+                }
+
+                // Create Drive API service.
+                if (m_Service == null)
+                {
+                    m_Service = new DriveService(new BaseClientService.Initializer()
+                    {
+                        HttpClientInitializer = credential,
+                        ApplicationName = AppDomain.CurrentDomain.FriendlyName
+                    });
+                }
+            }
+            catch (Exception exp)
+            {
+                throw exp;
             }
         }
 
@@ -156,3 +170,6 @@ namespace DLDHelper
         }
     }
 }
+
+
+
